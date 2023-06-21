@@ -44,6 +44,10 @@ defmodule SensorHub.MixProject do
 
       # Custom
       {:veml6030, path: "../veml6030", targets: @all_targets},
+      # This package also works with the bosch BME680 sensor
+      {:bmp280, "~> 0.2.12", targets: @all_targets},
+      # Have the SGP40 instead of SGP30, let's see how this goes...
+      {:sgp40, "~> 0.1.5", targets: @all_targets},
 
       # Dependencies for specific targets
       # NOTE: It's generally low risk and recommended to follow minor version
