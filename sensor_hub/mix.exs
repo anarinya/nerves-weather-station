@@ -35,12 +35,15 @@ defmodule SensorHub.MixProject do
       {:ring_logger, "~> 0.9.0"},
       {:toolshed, "~> 0.3.0"},
 
-      # New
+      # Custom
       {:circuits_i2c, "~> 0.3.8"},
 
       # Dependencies for all targets except :host
       {:nerves_runtime, "~> 0.13.0", targets: @all_targets},
       {:nerves_pack, "~> 0.7.0", targets: @all_targets},
+
+      # Custom
+      {:veml6030, path: "../veml6030", targets: @all_targets},
 
       # Dependencies for specific targets
       # NOTE: It's generally low risk and recommended to follow minor version
