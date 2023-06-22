@@ -5,6 +5,8 @@ defmodule SensorHub.Application do
 
   use Application
 
+  alias SensorHub.Sensor
+
   @impl true
   def start(_type, _args) do
     # See https://hexdocs.pm/elixir/Supervisor.html
