@@ -104,3 +104,32 @@ iex> RingLogger.attach()
 ```
 
 As soon as the firmware has been uploaded to the device, the supervisor should kick off the publisher and sensor readings, which will immediately start publishing to the dashboard backend every 10 seconds.
+
+```mermaid
+graph LR
+	PG[("⏲\nPostgresDB\n[TimeseriesDB]\n\n")]
+	QwiicHAT["Qwiic\nHAT\n\n"]
+
+  subgraph RPI4["Raspberry Pi"]
+		subgraph "Sensor Hub Firmware"
+			subgraph Supervisor
+				Publisher
+				SensorSpecs
+			end
+		end
+	end
+
+
+	subgraph Dashboard
+		Endpoint["POST /weather-conditions"]
+	end
+
+QwiicHAT --> RPI4
+VEML6030 --> QwiicHAT
+SGP40 --> QwiicHAT
+BME680 --> QwiicHAT
+Publisher --> LAN
+LAN --> Endpoint
+
+Dashboard --> PG
+```
