@@ -1,5 +1,5 @@
 defmodule Dashboard.WeatherConditions.WeatherCondition do
-  use Ecto.schema()
+  use Ecto.Schema
   import Ecto.Changeset
 
   @allowed_fields [
@@ -10,7 +10,7 @@ defmodule Dashboard.WeatherConditions.WeatherCondition do
     :light_lumens
   ]
 
-  @derive(Jason.Encoder, only: @allowed_fields)
+  @derive {Jason.Encoder, only: @allowed_fields}
 
   # There are no use cases for fetching a single weather condition by id
   # Instead, the data will be queried by timestamp
