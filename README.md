@@ -102,3 +102,5 @@ Once connected, debug logging can be viewed:
 ```elixir
 iex> RingLogger.attach()
 ```
+
+As soon as the firmware has been uploaded to the device, the supervisor should kick off the publisher and sensor readings, which will immediately start publishing to the dashboard backend every 10 seconds.
