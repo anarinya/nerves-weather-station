@@ -28,7 +28,7 @@ Install dependencies after navigating into the dashboard directory:
 $ mix deps.get
 ```
 
-Run docker compose to create the Postgres Timeseries DB:
+Run docker compose to create the Postgres Timeseries DB and setup Grafana on port 3000:
 
 ```elixir
 $ docker-compose up -d
@@ -46,6 +46,8 @@ Start the server. It will run on port 4000 and accept incoming POST requests to 
 ```elixir
 $ mix phx.server
 ```
+
+To setup Grafana, visit http://localhost:3000 and import the JSON file located at `grafana/weather-tracker.json`. Data will not yet be available until the service is running and the sensor hub is successfully setup and starts publishing data.
 
 **Note**: This is a work in progress and there is no visualization dashboard just yet. The initial version of this project just uses Grafana to visualize available data.
 
@@ -132,4 +134,6 @@ Publisher --> LAN
 LAN --> Endpoint
 
 Dashboard --> PG
+PG --> Grafana
+User --> Grafana
 ```
