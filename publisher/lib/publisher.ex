@@ -10,7 +10,7 @@ defmodule Publisher do
   @impl true
   def init(options) do
     state = %{
-      interval: options[:interval] || 10_000,
+      interval: options[:interval] || 30_000,
       weather_tracker_url: options[:weather_tracker_url],
       sensors: options[:sensors],
       measurements: :no_measurements
