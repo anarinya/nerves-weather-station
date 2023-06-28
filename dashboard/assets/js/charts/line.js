@@ -27,7 +27,7 @@ class LineChartBase {
         },
         scales: {
           x: {
-            reverse: false,
+            reverse: true,
             ticks: {
               color: "#9e9e9e"
             }
