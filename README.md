@@ -84,11 +84,11 @@ Export a MIX_TARGET environment variable, set to the iteration of RaspberryPi or
 $ export MIX_TARGET=rpi4
 ```
 
-Burn firmware and upload it:
+Navigate into the sensor_hub directory, build firmware and then upload it:
 
 ```bash
 $ mix firmware
-$ mix upload
+$ mix upload hub.local
 ```
 
 Confirm the elixir shell is accessible on the device:
