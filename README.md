@@ -80,22 +80,39 @@ config :sensor_hub, :weather_tracker_url, "http://192.168.1.187:4000/api/weather
 
 Export a MIX_TARGET environment variable, set to the iteration of RaspberryPi or other device the sensor hub will be used on:
 
-```elixir
+```bash
 $ export MIX_TARGET=rpi4
 ```
 
 Burn firmware and upload it:
 
-```elixir
+```bash
 $ mix firmware
 $ mix upload
 ```
 
 Confirm the elixir shell is accessible on the device:
 
-```elixir
+```bash
 $ ssh hub.local
 ```
+
+When SSH is successful and the elixir shell is available, VintageNet may need to be configured with local LAN details so it can be accessed via that instead of USB:
+```elixir
+iex> 
+VintageNet.configure("wlan0", %{
+  type: VintageNetWiFi,
+  vintage_net_wifi: %{
+    networks: [%{
+      key_mgmt: :wpa_psk,
+      ssid: "<YOUR NETWORK NAME>",
+      psk: "<YOUR WIRELESS PASSWORD>"
+    }]
+  },
+  ipv4: %{method: :dhcp}
+})
+```
+
 
 **Note:** If any messages about SSH keys pop up, follow the instructions given. By default, the firmware installation may expect the device to be located at nerves.local instead of hub.local. After connecting at least once via SSH, this seems to update.
 
@@ -122,7 +139,7 @@ graph LR
 	end
 
 
-	subgraph Dashboard
+	subgraph Dashboard["Dashboard Service"]
 		Endpoint["POST /weather-conditions"]
     DL["Dashboard\nLiveView"]
     Endpoint --> |publish| PubSub
