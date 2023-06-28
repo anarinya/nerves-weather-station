@@ -124,6 +124,9 @@ graph LR
 
 	subgraph Dashboard
 		Endpoint["POST /weather-conditions"]
+    DL["Dashboard\nLiveView"]
+    Endpoint --> |publish| PubSub
+    DL --> |subscribe| PubSub
 	end
 
 QwiicHAT --> RPI4
@@ -133,7 +136,8 @@ BME680 --> QwiicHAT
 Publisher --> LAN
 LAN --> Endpoint
 
-Dashboard --> PG
+Endpoint --> PG
 PG --> Grafana
 User --> Grafana
+U2["User"] --> DL
 ```
