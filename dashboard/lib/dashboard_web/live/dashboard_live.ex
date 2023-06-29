@@ -14,7 +14,7 @@ defmodule DashboardWeb.DashboardLive do
 
     labels =
       readings
-      |> Enum.map(fn reading -> reading.timestamp end)
+      |> Enum.map(fn reading -> format_date(reading.timestamp) end)
 
     {:ok,
      assign(socket,
@@ -50,6 +50,10 @@ defmodule DashboardWeb.DashboardLive do
     celsius
     |> Decimal.mult(Decimal.new(1, 18, -1))
     |> Decimal.add(32)
+  end
+
+  defp format_date(datetime) do
+    Calendar.strftime(datetime, "%b %d, %y | %I:%M %p")
   end
 
   defp add_point(socket) do

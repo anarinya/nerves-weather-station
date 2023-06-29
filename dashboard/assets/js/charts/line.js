@@ -12,7 +12,9 @@ class LineChartBase {
           borderColor: "#4c51bf",
           showLine: true,
           spanGap: true,
-          stepSize: 1
+          stepSize: 1,
+          yAxisId: "y",
+          xAxisId: "x",
         }]
       },
       options: {
@@ -30,10 +32,22 @@ class LineChartBase {
             reverse: true,
             ticks: {
               color: "#9e9e9e"
-            }
+            },
           },
           y: {
-            round: true
+            title: {
+              text: "Temperature (°F)"
+            },
+            round: true,
+            scaleLabel: {
+              display: true,
+              labelString: "Temperature (°F)"
+            },
+            ticks: {
+              callback: function (value) {
+                return value.toFixed(2) + " °F";
+              }
+            }
           }
         }
       }
