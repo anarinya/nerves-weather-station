@@ -7,7 +7,7 @@ class LineChartBase {
       data: {
         labels: labels,
         datasets: [{
-          label: "Temperature",
+          label: "Temperature (°F)",
           data: values,
           borderColor: "#4c51bf",
           showLine: true,
@@ -18,6 +18,11 @@ class LineChartBase {
         }]
       },
       options: {
+        layout: {
+          padding: {
+            left: 50
+          }
+        },
         animation: {
           duration: 0
         },
@@ -35,9 +40,6 @@ class LineChartBase {
             },
           },
           y: {
-            title: {
-              text: "Temperature (°F)"
-            },
             round: true,
             scaleLabel: {
               display: true,
@@ -58,12 +60,12 @@ class LineChartBase {
     const labels = this.chart.data.labels;
     const data = this.chart.data.datasets[0].data;
 
-    labels.push(label);
-    data.push(value);
+    labels.unshift(label);
+    data.unshift(value);
 
     if (data.length > 12) {
-      labels.shift();
-      data.shift();
+      labels.pop();
+      data.pop();
     }
 
     this.chart.update();

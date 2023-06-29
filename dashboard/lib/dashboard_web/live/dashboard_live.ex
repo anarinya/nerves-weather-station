@@ -31,7 +31,7 @@ defmodule DashboardWeb.DashboardLive do
 
   def handle_info({:weather_condition_created, weather_condition}, socket) do
     new_reading = %{
-      label: weather_condition.timestamp,
+      label: format_date(weather_condition.timestamp),
       value: celsius_to_fahrenheit(weather_condition.temperature_c)
     }
 
