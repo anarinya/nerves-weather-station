@@ -1,5 +1,23 @@
 import Chart from "chart.js/auto"
 
+const getGradient = (ctx, chartArea) => {
+  let width, height, gradient;
+
+  const chartWidth = chartArea.right - chartArea.left;
+  const chartHeight = chartArea.bottom - chartArea.top;
+
+  if (!gradient || width !== chartWidth || height !== chartHeight) {
+    // Create gradient size for first render or size when chart changes
+    width = chartWidth;
+    height = chartHeight;
+
+    gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+    gradient.addColorStop(0, "rgb(6, 182, 212)");
+    gradient.addColorStop(1, " rgb(219, 39, 119)");
+  }
+  return gradient;
+}
+
 class LineChartBase {
   constructor(ctx, labels, values) {
     this.chart = new Chart(ctx, {
@@ -9,18 +27,31 @@ class LineChartBase {
         datasets: [{
           label: "Temperature (°F)",
           data: values,
-          borderColor: "#4c51bf",
           showLine: true,
           spanGap: true,
-          stepSize: 1,
           yAxisId: "y",
           xAxisId: "x",
+          borderColor: function (context) {
+            const chart = context.chart;
+            const { ctx, chartArea } = chart;
+
+            // This happens on initial load
+            if (!chartArea) return null;
+            return getGradient(ctx, chartArea);
+          },
         }]
       },
       options: {
+        responsive: true,
+        interaction: {
+          intersect: false,
+          axis: 'x'
+        },
+        maintainAspectRatio: false,
+        resizeDelay: 200,
         layout: {
           padding: {
-            left: 50
+            left: 40
           }
         },
         animation: {
@@ -36,7 +67,9 @@ class LineChartBase {
           x: {
             reverse: true,
             ticks: {
-              color: "#9e9e9e"
+              color: "#9e9e9e",
+              count: 5,
+              stepSize: 20
             },
           },
           y: {
@@ -47,7 +80,7 @@ class LineChartBase {
             },
             ticks: {
               callback: function (value) {
-                return value.toFixed(2) + " °F";
+                return value.toFixed(1) + " °F";
               }
             }
           }

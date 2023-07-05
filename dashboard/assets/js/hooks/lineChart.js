@@ -9,8 +9,6 @@ const LineChart = {
       this.chart.addPoint(label, value);
     })
   }
-
-
 }
 
 export default LineChart;
