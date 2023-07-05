@@ -71,6 +71,7 @@ defmodule DashboardWeb.DashboardLive do
       socket
       |> assign(:current_temp_reading, new_temp_reading)
       |> assign(:current_voc_reading, new_voc_reading)
+      |> assign(:current_ambient_light_reading, weather_condition.light_lumens)
 
     {:noreply, add_point(socket)}
   end
