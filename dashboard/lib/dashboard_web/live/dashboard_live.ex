@@ -95,7 +95,7 @@ defmodule DashboardWeb.DashboardLive do
   end
 
   defp format_date(datetime) do
-    Calendar.strftime(datetime, "%b %d, %I:%M %P")
+    Calendar.strftime(datetime, "%b %d, %y | %I:%M %P")
   end
 
   defp format_lumens(lumens) do
@@ -208,7 +208,7 @@ defmodule DashboardWeb.DashboardLive do
   def last_updated(%{:date => date} = assigns) do
     time_ago =
       date
-      |> Timex.parse!("%b %d, %I:%M %P", :strftime)
+      |> Timex.parse!("%b %d, %y | %I:%M %P", :strftime)
       |> Timex.from_now()
 
     ~H"""
