@@ -1,4 +1,5 @@
 import Chart from "chart.js/auto"
+import "chartjs-adapter-luxon"
 
 const getGradient = (ctx, chartArea) => {
   let width, height, gradient;
@@ -21,6 +22,7 @@ const getGradient = (ctx, chartArea) => {
 class LineChartBase {
   constructor(ctx, labels, values) {
     this.chart = new Chart(ctx, {
+      plugins: ["chartjs-adapter-luxon"],
       type: "line",
       data: {
         labels: labels,
@@ -42,20 +44,22 @@ class LineChartBase {
         }]
       },
       options: {
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
         responsive: true,
         interaction: {
           intersect: false,
-          axis: 'x'
+          axis: 'x',
+          mode: "nearest",
         },
+        spanGaps: 1000 * 60 * 60 * 24 * 2, // 2 days
         maintainAspectRatio: false,
         resizeDelay: 200,
-        layout: {
-          padding: {
-            left: 40
-          }
-        },
         animation: {
-          duration: 0
+          duration: 1000
         },
         realtime: true,
         elements: {
@@ -65,15 +69,34 @@ class LineChartBase {
         },
         scales: {
           x: {
-            reverse: true,
+            adapters: {
+              date: {
+                zone: "America/Chicago"
+              }
+            },
+            display: true,
+            type: "time",
             ticks: {
-              color: "#9e9e9e",
-              count: 5,
-              stepSize: 20
+              autoSkip: false,
+              major: {
+                enabled: true
+              },
+              maxTicksLimit: 12,
+              font: function (context) {
+                if (context.tick && context.tick.major) {
+                  return {
+                    weight: "bold",
+                  }
+                }
+              },
             },
           },
           y: {
             round: true,
+            title: {
+              display: true,
+              text: "Temperature"
+            },
             scaleLabel: {
               display: true,
               labelString: "Temperature (°F)"

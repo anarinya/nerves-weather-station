@@ -12,12 +12,12 @@ defmodule DashboardWeb.DashboardLive do
 
     if connected?(socket), do: WeatherConditions.subscribe()
 
-    readings = WeatherConditions.list_readings(20)
+    readings = WeatherConditions.list_readings(100)
 
-    latest_ambient_light_reading =
+    latest_readings =
       readings
       |> hd()
-      |> Map.get(:light_lumens)
+      |> Map.take([:timestamp, :temperature_c, :voc_index, :light_lumens, :humidity_rh])
 
     temp_values =
       readings
@@ -29,7 +29,7 @@ defmodule DashboardWeb.DashboardLive do
 
     date_labels =
       readings
-      |> Enum.map(fn reading -> format_date(reading.timestamp) end)
+      |> Enum.map(fn reading -> format_date_to_UTC(reading.timestamp) end)
 
     {:ok,
      assign(socket,
@@ -50,12 +50,12 @@ defmodule DashboardWeb.DashboardLive do
          value: hd(voc_values)
        },
        last_update: hd(date_labels),
-       current_ambient_light_reading: latest_ambient_light_reading
+       latest_readings: latest_readings
      )}
   end
 
   def handle_info({:weather_condition_created, weather_condition}, socket) do
-    new_date = format_date(weather_condition.timestamp)
+    new_date = format_date_to_UTC(weather_condition.timestamp)
 
     new_temp_reading = %{
       label: new_date,
@@ -67,11 +67,15 @@ defmodule DashboardWeb.DashboardLive do
       value: weather_condition.voc_index
     }
 
+    latest_readings =
+      weather_condition
+      |> Map.take([:timestamp, :temperature_c, :voc_index, :light_lumens, :humidity_rh])
+
     socket =
       socket
       |> assign(:current_temp_reading, new_temp_reading)
       |> assign(:current_voc_reading, new_voc_reading)
-      |> assign(:current_ambient_light_reading, weather_condition.light_lumens)
+      |> assign(:latest_readings, latest_readings)
 
     {:noreply, add_point(socket)}
   end
@@ -83,7 +87,7 @@ defmodule DashboardWeb.DashboardLive do
   defp readings_to_assigns_map(readings) do
     Enum.map(readings, fn reading ->
       %{
-        label: format_date(reading.timestamp),
+        label: reading.timestamp,
         value: celsius_to_fahrenheit(reading.temperature_c)
       }
     end)
@@ -99,10 +103,16 @@ defmodule DashboardWeb.DashboardLive do
     Calendar.strftime(datetime, "%b %d, %y | %I:%M %P")
   end
 
-  defp format_lumens(lumens) do
-    lumens
-    |> Decimal.mult(Decimal.new(1, 18, -1))
-    |> Decimal.round(2)
+  defp format_date_to_tz(datetime, tz), do: DateTime.from_naive!(datetime, tz)
+  defp format_date_to_CST(datetime), do: format_date_to_tz(datetime, "America/Chicago")
+  defp format_date_to_UTC(datetime), do: format_date_to_tz(datetime, "Etc/UTC")
+
+  defp format_lumens(lumens), do: decimal_round(lumens, 2)
+  defp format_humidity(humidity), do: decimal_round(humidity, 2)
+
+  defp decimal_round(value, precision) do
+    value
+    |> Decimal.round(precision)
   end
 
   defp add_point(socket) do
@@ -125,7 +135,7 @@ defmodule DashboardWeb.DashboardLive do
 
   def card_grid(assigns) do
     ~H"""
-    <div class="flex flex-wrap items-stretch items-start gap-6 px-12 bg-white justify-items-start">
+    <div class="flex flex-row flex-wrap items-stretch items-center gap-6 px-12 bg-white justify-items-start">
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -136,8 +146,8 @@ defmodule DashboardWeb.DashboardLive do
   def card(assigns) do
     ~H"""
     <div class="p-px grow rounded-2xl bg-gradient-to-b from-blue-300 to-pink-300 drop-shadow">
-      <div class="group rounded-[calc(1rem-1.5px)] justify-center flex flex-col py-8 px-6 bg-white h-full">
-        <div class="flex flex-col items-center gap-2 text-gray-700">
+      <div class="group rounded-[calc(1rem-1.5px)] justify-center flex flex-wrap py-8 px-8 bg-white h-full grow">
+        <div class="flex flex-col items-center justify-center gap-2 text-gray-700 grow">
           <%= render_slot(@inner_block) %>
         </div>
       </div>
@@ -148,7 +158,7 @@ defmodule DashboardWeb.DashboardLive do
   def chart_card(assigns) do
     ~H"""
     <div class="p-px grow rounded-2xl bg-gradient-to-b from-blue-300 to-pink-300 drop-shadow">
-      <div class="group rounded-[calc(1rem-1.5px)] pl-3 pr-8 py-8 bg-white h-full">
+      <div class="group rounded-[calc(1rem-1.5px)] pl-3 pr-8 py-8 bg-white h-full grow">
         <%= render_slot(@inner_block) %>
       </div>
     </div>
@@ -186,13 +196,11 @@ defmodule DashboardWeb.DashboardLive do
     """
   end
 
-  def card_humidity(assigns) do
-    humidity = "80%"
-
+  def card_humidity(%{:humidity => humidity} = assigns) do
     ~H"""
     <.card>
       <.icon name="hero-beaker" class="w-24 h-24" />
-      <span class="overflow-visible text-5xl whitespace-nowrap"><%= humidity %></span>
+      <span class="overflow-visible text-5xl whitespace-nowrap"><%= format_humidity(humidity) %>%</span>
       <span class="overflow-visible text-3xl whitespace-nowrap">Humidity</span>
     </.card>
     """
@@ -208,12 +216,12 @@ defmodule DashboardWeb.DashboardLive do
 
   def last_updated(%{:date => date} = assigns) do
     time_ago =
-      date
+      format_date(date)
       |> Timex.parse!("%b %d, %y | %I:%M %P", :strftime)
       |> Timex.from_now()
 
     ~H"""
-    <div class="flex flex-wrap gap-2 px-12 mb-6">
+    <div class="flex flex-wrap gap-2 px-12 mb-4">
       <span class="overflow-visible text-base whitespace-nowrap">Last updated: <%= time_ago %></span>
     </div>
     """
@@ -225,9 +233,9 @@ defmodule DashboardWeb.DashboardLive do
       <.last_updated date={@current_temp_reading.label} />
       <.card_grid>
         <.card_temp temp={@current_temp_reading.value} />
-        <.card_humidity />
-        <.card_voc_index voc_index={@current_voc_reading.value} />
-        <.card_ambient_light lumens={@current_ambient_light_reading} />
+        <.card_humidity humidity={@latest_readings.humidity_rh} />
+        <.card_voc_index voc_index={@latest_readings.voc_index} />
+        <.card_ambient_light lumens={@latest_readings.light_lumens} />
         <.chart_wrapper current_temp_reading={@current_temp_reading} temp_data={@temp_data} />
       </.card_grid>
     </div>
