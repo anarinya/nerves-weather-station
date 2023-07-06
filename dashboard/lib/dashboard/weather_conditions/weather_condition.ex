@@ -13,6 +13,14 @@ defmodule Dashboard.WeatherConditions.WeatherCondition do
     :humidity_rh
   ]
 
+  @required_fields [
+    :altitude_m,
+    :pressure_pa,
+    :temperature_c,
+    :voc_index,
+    :light_lumens
+  ]
+
   @derive {Jason.Encoder, only: @allowed_fields}
 
   # There are no use cases for fetching a single weather condition by id
@@ -38,7 +46,7 @@ defmodule Dashboard.WeatherConditions.WeatherCondition do
 
     weather_condition
     |> cast(attrs, @allowed_fields)
-    |> validate_required(@allowed_fields)
+    |> validate_required(@required_fields)
     |> put_change(:timestamp, timestamp)
   end
 end
