@@ -7,7 +7,10 @@ defmodule Dashboard.WeatherConditions.WeatherCondition do
     :pressure_pa,
     :temperature_c,
     :voc_index,
-    :light_lumens
+    :light_lumens,
+    :dew_point_c,
+    :gas_resistance_ohms,
+    :humidity_rh
   ]
 
   @derive {Jason.Encoder, only: @allowed_fields}
@@ -23,6 +26,9 @@ defmodule Dashboard.WeatherConditions.WeatherCondition do
     field(:temperature_c, :decimal)
     field(:light_lumens, :decimal)
     field(:voc_index, :integer)
+    field(:dew_point_c, :decimal)
+    field(:gas_resistance_ohms, :decimal)
+    field(:humidity_rh, :decimal)
   end
 
   def create_changeset(weather_condition = %__MODULE__{}, attrs) do
