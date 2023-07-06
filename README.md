@@ -6,6 +6,9 @@
 
 # Description
 
+![image](https://github.com/anarinya/nerves-weather-station/assets/5115364/1ea06687-3aa8-48f0-b287-7cd5bb4fe47a)
+
+
 This is a small experimental Nerves project to make a small weather station and display the summarized readings over time. It contains the two following projects:
 
 ### Sensor Hub
