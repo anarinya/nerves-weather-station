@@ -51,7 +51,8 @@ defmodule Dashboard.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:decimal, "~> 2.0.0"},
-      {:timex, "~> 3.7.11"}
+      {:timex, "~> 3.7.11"},
+      {:tzdata, "~> 1.1"}
     ]
   end
 

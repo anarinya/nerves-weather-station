@@ -20,8 +20,6 @@ defmodule DashboardWeb.DashboardLive do
       socket
       |> assign(:timezone, get_connect_params(socket)["timezone"] || @default_timezone)
 
-    IO.puts(get_connect_params(socket)["timezone"])
-
     latest_readings =
       readings
       |> hd()
@@ -46,10 +44,8 @@ defmodule DashboardWeb.DashboardLive do
       |> assign(:voc_data, %{labels: date_labels, values: voc_values})
       |> assign(:current_temp_reading, %{label: hd(date_labels), value: hd(temp_values)})
       |> assign(:current_voc_reading, %{label: hd(date_labels), value: hd(voc_values)})
-      |> assign(:last_update, hd(date_labels))
+      |> assign(:last_updated, get_current_datetime(socket))
       |> assign(:latest_readings, latest_readings)
-
-    IO.puts(socket.assigns.latest_readings.timestamp)
 
     {:ok, socket}
   end
@@ -77,6 +73,7 @@ defmodule DashboardWeb.DashboardLive do
       |> assign(:current_temp_reading, new_temp_reading)
       |> assign(:current_voc_reading, new_voc_reading)
       |> assign(:latest_readings, latest_readings)
+      |> assign(:last_updated, get_current_datetime(socket))
 
     {:noreply, add_point(socket)}
   end
@@ -111,6 +108,11 @@ defmodule DashboardWeb.DashboardLive do
     }
 
     push_event(socket, "new-point", point)
+  end
+
+  defp get_current_datetime(socket) do
+    Timex.now(socket.assigns.timezone)
+    |> Timex.format!("%B %-d, %Y @ %-I:%M %p (%Z)", :strftime)
   end
 
   defp voc_score(voc_index) when voc_index in 0..99, do: "Excellent"
@@ -214,7 +216,7 @@ defmodule DashboardWeb.DashboardLive do
   def render(assigns) do
     ~H"""
     <div id="dashboard-main">
-      <.last_updated date={@latest_readings.timestamp} />
+      <.last_updated date={@last_updated} />
       <.card_grid>
         <.card_temp temp={@current_temp_reading.value} />
         <.card_humidity humidity={@latest_readings.humidity_rh} />

@@ -1,8 +1,6 @@
 defmodule DashboardWeb.Components.Charts do
   use Phoenix.Component
 
-  alias Decimal, as: D
-
   def timeline(assigns) do
     ~H"""
     <div id={"#{@id}-charting"}>
