@@ -14,7 +14,7 @@ defmodule DashboardWeb.DashboardLive do
 
     if connected?(socket), do: WeatherConditions.subscribe()
 
-    readings = WeatherConditions.list_readings(50)
+    readings = WeatherConditions.list_readings(25)
 
     socket =
       socket

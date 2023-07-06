@@ -76,7 +76,7 @@ class LineChartBase {
               major: {
                 enabled: true
               },
-              maxTicksLimit: 12,
+              maxTicksLimit: 15,
               font: function (context) {
                 if (context.tick && context.tick.major) {
                   return {
