@@ -55,7 +55,7 @@ class LineChartBase {
           axis: 'x',
           mode: "nearest",
         },
-        spanGaps: 1000 * 60 * 60 * 24 * 2, // 2 days
+        spanGaps: 1000 * 60 * 60 * 24 * 1, // 1 day
         maintainAspectRatio: false,
         resizeDelay: 200,
         animation: {
@@ -69,11 +69,6 @@ class LineChartBase {
         },
         scales: {
           x: {
-            adapters: {
-              date: {
-                zone: "America/Chicago"
-              }
-            },
             display: true,
             type: "time",
             ticks: {

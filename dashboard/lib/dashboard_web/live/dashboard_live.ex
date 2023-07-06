@@ -6,18 +6,27 @@ defmodule DashboardWeb.DashboardLive do
   alias DashboardWeb.Components.Charts
   alias Decimal, as: D
 
+  @default_timezone "UTC"
+
   def mount(_params, _session, socket) do
     # Set decimal precision to 3
     D.Context.set(%D.Context{D.Context.get() | precision: 3})
 
     if connected?(socket), do: WeatherConditions.subscribe()
 
-    readings = WeatherConditions.list_readings(100)
+    readings = WeatherConditions.list_readings(50)
+
+    socket =
+      socket
+      |> assign(:timezone, get_connect_params(socket)["timezone"] || @default_timezone)
+
+    IO.puts(get_connect_params(socket)["timezone"])
 
     latest_readings =
       readings
       |> hd()
       |> Map.take([:timestamp, :temperature_c, :voc_index, :light_lumens, :humidity_rh])
+      |> Map.update!(:timestamp, &format_date(&1))
 
     temp_values =
       readings
@@ -29,33 +38,24 @@ defmodule DashboardWeb.DashboardLive do
 
     date_labels =
       readings
-      |> Enum.map(fn reading -> format_date_to_UTC(reading.timestamp) end)
+      |> Enum.map(fn reading -> format_date(reading.timestamp) end)
 
-    {:ok,
-     assign(socket,
-       temp_data: %{
-         labels: date_labels,
-         values: temp_values
-       },
-       current_temp_reading: %{
-         label: hd(date_labels),
-         value: hd(temp_values)
-       },
-       voc_data: %{
-         labels: date_labels,
-         values: voc_values
-       },
-       current_voc_reading: %{
-         label: hd(date_labels),
-         value: hd(voc_values)
-       },
-       last_update: hd(date_labels),
-       latest_readings: latest_readings
-     )}
+    socket =
+      socket
+      |> assign(:temp_data, %{labels: date_labels, values: temp_values})
+      |> assign(:voc_data, %{labels: date_labels, values: voc_values})
+      |> assign(:current_temp_reading, %{label: hd(date_labels), value: hd(temp_values)})
+      |> assign(:current_voc_reading, %{label: hd(date_labels), value: hd(voc_values)})
+      |> assign(:last_update, hd(date_labels))
+      |> assign(:latest_readings, latest_readings)
+
+    IO.puts(socket.assigns.latest_readings.timestamp)
+
+    {:ok, socket}
   end
 
   def handle_info({:weather_condition_created, weather_condition}, socket) do
-    new_date = format_date_to_UTC(weather_condition.timestamp)
+    new_date = format_date(weather_condition.timestamp)
 
     new_temp_reading = %{
       label: new_date,
@@ -70,6 +70,7 @@ defmodule DashboardWeb.DashboardLive do
     latest_readings =
       weather_condition
       |> Map.take([:timestamp, :temperature_c, :voc_index, :light_lumens, :humidity_rh])
+      |> Map.update!(:timestamp, &format_date(&1))
 
     socket =
       socket
@@ -84,28 +85,16 @@ defmodule DashboardWeb.DashboardLive do
     {:noreply, add_point(socket)}
   end
 
-  defp readings_to_assigns_map(readings) do
-    Enum.map(readings, fn reading ->
-      %{
-        label: reading.timestamp,
-        value: celsius_to_fahrenheit(reading.temperature_c)
-      }
-    end)
-  end
-
   defp celsius_to_fahrenheit(celsius) do
     celsius
     |> Decimal.mult(Decimal.new(1, 18, -1))
     |> Decimal.add(32)
   end
 
-  defp format_date(datetime) do
-    Calendar.strftime(datetime, "%b %d, %y | %I:%M %P")
-  end
+  defp format_date(datetime), do: DateTime.from_naive!(datetime, @default_timezone)
 
-  defp format_date_to_tz(datetime, tz), do: DateTime.from_naive!(datetime, tz)
-  defp format_date_to_CST(datetime), do: format_date_to_tz(datetime, "America/Chicago")
-  defp format_date_to_UTC(datetime), do: format_date_to_tz(datetime, "Etc/UTC")
+  # defp format_date_to_tz(datetime, tz), do: DateTime.from_naive!(datetime, tz)
+  # defp format_date_to_local_tz(datetime, tz), do: format_date_to_tz(datetime, tz)
 
   defp format_lumens(lumens), do: decimal_round(lumens, 2)
   defp format_humidity(humidity), do: decimal_round(humidity, 2)
@@ -135,7 +124,7 @@ defmodule DashboardWeb.DashboardLive do
 
   def card_grid(assigns) do
     ~H"""
-    <div class="flex flex-row flex-wrap items-stretch items-center gap-6 px-12 bg-white justify-items-start">
+    <div class="flex flex-row flex-wrap items-stretch items-center gap-6 px-12 justify-items-start">
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -165,42 +154,42 @@ defmodule DashboardWeb.DashboardLive do
     """
   end
 
-  def card_temp(%{:temp => temp} = assigns) do
+  def card_temp(assigns) do
     ~H"""
     <.card>
       <.icon name="hero-sun" class="w-24 h-24" />
       <div>
-        <h1 class="overflow-visible text-6xl whitespace-nowrap"><%= temp %> °F</h1>
+        <h1 class="overflow-visible text-6xl whitespace-nowrap"><%= @temp %> °F</h1>
       </div>
     </.card>
     """
   end
 
-  def card_voc_index(%{:voc_index => voc_index} = assigns) do
+  def card_voc_index(assigns) do
     ~H"""
     <.card>
       <.icon name="hero-cloud" class="w-24 h-24" />
-      <span class="overflow-visible text-5xl whitespace-nowrap"><%= voc_score(voc_index) %></span>
-      <span class="overflow-visible text-3xl whitespace-nowrap">AQ: <%= voc_index %>/500</span>
+      <span class="overflow-visible text-5xl whitespace-nowrap"><%= voc_score(@voc_index) %></span>
+      <span class="overflow-visible text-3xl whitespace-nowrap">AQ: <%= @voc_index %>/500</span>
     </.card>
     """
   end
 
-  def card_ambient_light(%{:lumens => lumens} = assigns) do
+  def card_ambient_light(assigns) do
     ~H"""
     <.card>
       <.icon name="hero-light-bulb" class="w-24 h-24" />
-      <span class="overflow-visible text-5xl whitespace-nowrap"><%= format_lumens(lumens) %></span>
+      <span class="overflow-visible text-5xl whitespace-nowrap"><%= format_lumens(@lumens) %></span>
       <span class="overflow-visible text-3xl whitespace-nowrap">Lumens</span>
     </.card>
     """
   end
 
-  def card_humidity(%{:humidity => humidity} = assigns) do
+  def card_humidity(assigns) do
     ~H"""
     <.card>
       <.icon name="hero-beaker" class="w-24 h-24" />
-      <span class="overflow-visible text-5xl whitespace-nowrap"><%= format_humidity(humidity) %>%</span>
+      <span class="overflow-visible text-5xl whitespace-nowrap"><%= format_humidity(@humidity) %>%</span>
       <span class="overflow-visible text-3xl whitespace-nowrap">Humidity</span>
     </.card>
     """
@@ -214,15 +203,10 @@ defmodule DashboardWeb.DashboardLive do
     """
   end
 
-  def last_updated(%{:date => date} = assigns) do
-    time_ago =
-      format_date(date)
-      |> Timex.parse!("%b %d, %y | %I:%M %P", :strftime)
-      |> Timex.from_now()
-
+  def last_updated(assigns) do
     ~H"""
     <div class="flex flex-wrap gap-2 px-12 mb-4">
-      <span class="overflow-visible text-base whitespace-nowrap">Last updated: <%= time_ago %></span>
+      <span class="overflow-visible text-base whitespace-nowrap">Last updated: <%= @date %></span>
     </div>
     """
   end
@@ -230,7 +214,7 @@ defmodule DashboardWeb.DashboardLive do
   def render(assigns) do
     ~H"""
     <div id="dashboard-main">
-      <.last_updated date={@current_temp_reading.label} />
+      <.last_updated date={@latest_readings.timestamp} />
       <.card_grid>
         <.card_temp temp={@current_temp_reading.value} />
         <.card_humidity humidity={@latest_readings.humidity_rh} />
