@@ -14,7 +14,7 @@ defmodule DashboardWeb.DashboardLive do
 
     if connected?(socket), do: WeatherConditions.subscribe()
 
-    readings = WeatherConditions.list_readings(25)
+    readings = WeatherConditions.list_readings(30)
 
     socket =
       socket
@@ -47,7 +47,7 @@ defmodule DashboardWeb.DashboardLive do
       |> assign(:last_updated, get_current_datetime(socket))
       |> assign(:latest_readings, latest_readings)
 
-    {:ok, socket}
+    {:ok, socket, temporary_assigns: [temp_data: %{}, voc_data: %{}]}
   end
 
   def handle_info({:weather_condition_created, weather_condition}, socket) do
